@@ -1,9 +1,9 @@
 /*
-HMC5883L.cpp - Class file for the HMC5883L Triple Axis Digital Compass Arduino Library.
+AP33772S.h - Class file for the AP33772S USB-C PD 3.1 Sink Controller Arduino Library.
 
 Version: 1.1.0
-(c) 2014 Korneliusz Jarzebski
-www.jarzebski.pl
+(c) 2024 CentyLab
+www.centylab.com
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the version 3 GNU General Public License as
@@ -91,6 +91,18 @@ void AP33772S::displayProfiles()
     displayPDOInfo(pdoIndex);
   }
 }
+
+	
+/**
+ * @brief Hard reset
+ */
+ void AP33772S::reset()
+ {
+  i2c_read(AP33772S_ADDRESS, CMD_PD_CMDMSG, 1);
+  readBuf[0] |= 1;   // Set the bit
+  writeBuf[0] = readBuf[0];
+  i2c_write(AP33772S_ADDRESS, CMD_PD_CMDMSG, 1);
+ }
 
 /**
  * @brief Decode PDO information from SRC_SPRandEPR_PDO_Fields
@@ -402,8 +414,8 @@ int AP33772S::readCurrent()
  */
 int AP33772S::readVREQ()
 {
-    i2c_read(AP33772S_ADDRESS, CMD_VREQ, 1);
-    return readBuf[0] * 50; // I2C read return 50mV/LSB
+    i2c_read(AP33772S_ADDRESS, CMD_VREQ, 2);
+    return ((readBuf[1] << 8) | readBuf[0]) * 50; // I2C read return 50mV/LSB
 }
 
 /**
@@ -412,8 +424,8 @@ int AP33772S::readVREQ()
  */
 int AP33772S::readIREQ()
 {
-    i2c_read(AP33772S_ADDRESS, CMD_IREQ, 1);
-    return readBuf[0] * 10; // I2C read return 10mA/LSB
+    i2c_read(AP33772S_ADDRESS, CMD_IREQ, 2);
+    return ((readBuf[1] << 8) | readBuf[0]) * 10; // I2C read return 10mA/LSB
 }
 
 /**
@@ -704,10 +716,79 @@ bool AP33772S::setOutput(uint8_t flag){
         default:
             return 0; //Error, dont know the input
     }
+	
 }
 
-//** Need basic I2C function here */
+/**
+ * @brief Set a single mask flag
+ * @param AP33772_MASK target
+ * 
+ **/
+void AP33772S::setMask(AP33772_MASK flag)
+{
+  // First read in what is currently in the location
+  i2c_read(AP33772S_ADDRESS, CMD_MASK, 1);
+  readBuf[0] |= flag;   // Set the bit
+  writeBuf[0] = readBuf[0];
+  i2c_write(AP33772S_ADDRESS, CMD_MASK, 1);
+}
 
+/**
+ * @brief Clear a single mask flag
+ * @param AP33772_MASK target
+ * 
+ **/
+void AP33772S::clearMask(AP33772_MASK flag)
+{
+  // First read in what is currently in the location
+  i2c_read(AP33772S_ADDRESS, CMD_MASK, 1);
+  readBuf[0] &= ~flag;   // Set the bit
+  writeBuf[0] = readBuf[0];
+  i2c_write(AP33772S_ADDRESS, CMD_MASK, 1);
+}
+
+/**
+ * @brief Set a single config flag
+ * @param AP33772_CONFIG target
+ * 
+ **/
+void AP33772S::setConfig(AP33772_CONFIG flag)
+{
+  // First read in what is currently in the location
+  i2c_read(AP33772S_ADDRESS, CMD_CONFIG, 1);
+  readBuf[0] |= flag;   // Set the bit
+  writeBuf[0] = readBuf[0];
+  i2c_write(AP33772S_ADDRESS, CMD_CONFIG, 1);
+}
+
+/**
+ * @brief Clear a single config flag
+ * @param AP33772_CONFIG target
+ * 
+ **/
+void AP33772S::clearConfig(AP33772_CONFIG flag)
+{
+  // First read in what is currently in the location
+  i2c_read(AP33772S_ADDRESS, CMD_CONFIG, 1);
+  readBuf[0] &= ~flag;   // Set the bit
+  writeBuf[0] = readBuf[0];
+  i2c_write(AP33772S_ADDRESS, CMD_CONFIG, 1);
+}
+
+/**
+ * @brief Read entire MASK register
+ * @return value of MASK register in byte
+ * 
+ **/
+byte AP33772S::readMask()
+{
+    i2c_read(AP33772S_ADDRESS, CMD_MASK, 1);
+    return readBuf[0];
+}
+
+/*************LOW LEVEL HELPER FUNCTIONS***************/
+
+//** Need basic I2C function here */
 void AP33772S::i2c_read(byte slvAddr, byte cmdAddr, byte len)
 {
     // clear readBuffer

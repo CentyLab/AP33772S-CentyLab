@@ -1,7 +1,7 @@
 /*
 AP33772S.h - Header file for the AP33772S USB-C PD 3.1 Sink Controller Arduino Library.
 
-Version: 1.0.0
+Version: 1.1.0
 (c) 2024 CentyLab
 www.centylab.com
 
@@ -78,11 +78,20 @@ typedef enum
   STARTED_MSK   = 1 << 0,     // 0000 0001
   READY_MSK     = 1 << 1,     // 0000 0010
   NEWPDO_MSK    = 1 << 2,     // 0000 0100
-  UVP_MSK       = 1 << 3,     // 0001 0000
-  OVP_MSK       = 1 << 4,     // 0010 0000
-  OCP_MSK       = 1 << 5,     // 0100 0000
-  OTP_MSK       = 1 << 6      // 1000 0000
+  UVP_MSK       = 1 << 3,     // 0000 1000
+  OVP_MSK       = 1 << 4,     // 0001 0000
+  OCP_MSK       = 1 << 5,     // 0010 0000
+  OTP_MSK       = 1 << 6      // 0100 0000
 } AP33772_MASK;
+
+typedef enum
+{
+  UVP_EN       = 1 << 3,     // 0000 1000
+  OVP_EN       = 1 << 4,     // 0001 0000
+  OCP_EN       = 1 << 5,     // 0010 0000
+  OTP_EN       = 1 << 6,     // 0100 0000
+  DR_EN        = 1 << 7      // 1000 0000
+} AP33772_CONFIG;
 
 typedef struct
 {
@@ -166,22 +175,29 @@ class AP33772S
 public:
   AP33772S(TwoWire &wire = Wire);
   void begin();
+  void reset();
   void displayPDOInfo(int pdoIndex);
   void displayProfiles();
   void mapPPSAVSInfo();
   void setFixPDO(int pdoIndex, int max_current);
   void setPPSPDO(int pdoIndex, int target_voltage, int max_current);
   void setAVSPDO(int pdoIndex, int target_voltage, int max_current);
-  // void setVoltage(int targetVoltage); // Unit in mV
+  
   void setNTC(int TR25, int TR50, int TR75, int TR100);
   bool setOutput(uint8_t flag);
-  // void setMask(AP33772_MASK flag);
-  // void clearMask(AP33772_MASK flag);
+  
+  // Mask/Config functions
+  void setMask(AP33772_MASK flag);
+  void clearMask(AP33772_MASK flag);
+  void setConfig(AP33772_CONFIG flag);
+  void clearConfig(AP33772_CONFIG flag);
+  byte readMask();
 
   // Monitor functions
   int readTemp();
   int readVoltage();
   int readCurrent();
+
 
   // Adjustment functions
   int readVREQ();
@@ -225,10 +241,6 @@ private:
   static int _voltageAVSbyte;
   static int _currentAVSbyte;
   static int _indexAVS;
-
-  //static void timerISR1();
-  //void setupAVSTimer();
-  //void cancelAVSTimer();
 
   SRC_SPRandEPR_PDO_Fields SRC_SPRandEPRpdoArray[MAX_PDO_ENTRIES] = {0}; 
 
