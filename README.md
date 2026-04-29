@@ -36,6 +36,7 @@ The library is expected to work in all 32-bits micro-controller. The code **does
 
 ## Dependencies
 + [Arduino-timer](https://github.com/contrem/arduino-timer)
++ [INA238](https://github.com/RobTillaart/INA238/tree/master)
 
-## Example AVSCycle.ino
+## Example RotoPDPro_AVSCycle.ino
 ![AVSprofileChange](assets/AVSprofileChange.gif?raw=true "AVS")
